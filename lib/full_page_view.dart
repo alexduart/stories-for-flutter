@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:stories_for_flutter/stories_for_flutter.dart';
+import 'stories_for_flutter.dart';
 
 class FullPageView extends StatefulWidget {
   final List<StoryItem>? storiesMapList;
@@ -70,6 +70,7 @@ class FullPageViewState extends State<FullPageView> {
   late bool showStoryNameOnFullPage;
   Color? storyStatusBarColor;
   Timer? changePageTimer;
+  Timer? startTime;
 
   nextPage(index) {
     if (index == combinedList.length - 1) {
@@ -94,11 +95,31 @@ class FullPageViewState extends State<FullPageView> {
   }
 
   initPageChangeTimer() {
+    startTimer();
     if (widget.autoPlayDuration != null) {
       changePageTimer = Timer.periodic(widget.autoPlayDuration!, (timer) {
         nextPage(selectedIndex);
+        setState(() {
+          _progress = 0;
+        });
       });
     }
+  }
+
+  double _progress = 0;
+  void startTimer() {
+    startTime = Timer.periodic(
+      const Duration(seconds: 1),
+      (Timer timer) => setState(
+        () {
+          if (_progress == 1) {
+            timer.cancel();
+          } else {
+            _progress += 0.2;
+          }
+        },
+      ),
+    );
   }
 
   @override
@@ -126,12 +147,14 @@ class FullPageViewState extends State<FullPageView> {
   @override
   void dispose() {
     if (changePageTimer != null) changePageTimer!.cancel();
+    if (startTime != null) startTime!.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     _pageController = PageController(initialPage: selectedIndex!);
+
     return Scaffold(
       body: Stack(
         children: <Widget>[
@@ -197,17 +220,10 @@ class FullPageViewState extends State<FullPageView> {
                             (index) => Expanded(
                               child: Container(
                                 margin: const EdgeInsets.all(2),
-                                height: 2.5,
-                                decoration: BoxDecoration(
-                                    color: fullpageVisitedColor ??
-                                        const Color(0xff444444),
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        blurRadius: 10,
-                                        color: Colors.black,
-                                      )
-                                    ]),
+                                child: LinearProgressIndicator(
+                                  minHeight: 8.0,
+                                  value: _progress,
+                                ),
                               ),
                             ),
                           ) +
@@ -273,6 +289,17 @@ class FullPageViewState extends State<FullPageView> {
                 ],
               ),
             ],
+          ),
+          Positioned(
+            top: 35,
+            right: 15,
+            child: ElevatedButton(
+              child: const Icon(Icons.close),
+              style: ButtonStyle(),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
           ),
         ],
       ),

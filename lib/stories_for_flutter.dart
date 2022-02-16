@@ -1,5 +1,5 @@
-import 'package:stories_for_flutter/story_circle.dart';
 import 'package:flutter/material.dart';
+import 'story_circle.dart';
 
 class Stories extends StatelessWidget {
   /// Recieves the list of stories to display
